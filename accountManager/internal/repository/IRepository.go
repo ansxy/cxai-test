@@ -13,4 +13,5 @@ type IFaceRepository interface {
 
 	GetListAccount(c *gin.Context, userID string) ([]model.Account, error)
 	GetListTransaction(c *gin.Context, req request.ReqListTransaction) ([]model.Transaction, int64, error)
+	CreateAccount(c *gin.Context, data *model.Account) error
 }

@@ -28,3 +28,8 @@ func (r *Repository) GetListTransaction(c *gin.Context, req request.ReqListTrans
 	return transactions, total, nil
 
 }
+
+// CreateAccount implements IFaceRepository.
+func (r *Repository) CreateAccount(c *gin.Context, data *model.Account) error {
+	return r.BaseRepository.Create(r.db, data)
+}

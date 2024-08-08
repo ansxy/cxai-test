@@ -2,10 +2,12 @@ package response
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
 	"net/http"
 
-	custom_error "github.com/ansxy/golang-boilerplate-gin/pkg/error"
+	"github.com/ansxy/golang-boilerplate-gin/pkg/constant"
+	"gorm.io/gorm"
 )
 
 type JSONResponse struct {
@@ -53,10 +55,22 @@ func Pagination(w http.ResponseWriter, list interface{}, page int, perPage int, 
 }
 
 func Error(w http.ResponseWriter, err error) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(JSONResponse{Success: false, Error: &JSONErrorResponse{
+			Code:    constant.DefaultNotFoundErrorCode,
+			Message: constant.ErrorMessageMap[constant.DefaultNotFoundErrorCode],
+		}})
+		return
+	}
+
+	// fmt.Printf("%s \n", err.(*custom_error.CustomeError).ErrorContext.Function)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusBadRequest)
 	json.NewEncoder(w).Encode(JSONResponse{Success: false, Error: &JSONErrorResponse{
-		Code:    err.(*custom_error.CustomeError).ErrorContext.Code,
-		Message: err.(*custom_error.CustomeError).ErrorContext.Message,
+		Code:    constant.DefaultUnhandledErrorCode,
+		Message: constant.ErrorMessageMap[constant.DefaultUnhandledErrorCode],
 	}})
+
 }

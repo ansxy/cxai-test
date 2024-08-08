@@ -6,21 +6,33 @@ import (
 
 	"github.com/ansxy/golang-boilerplate-gin/internal/model"
 	"github.com/ansxy/golang-boilerplate-gin/internal/request"
-	"github.com/ansxy/golang-boilerplate-gin/pkg/constant"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 )
 
 // CreateAccount implements IUsecase.
 func (u *Usecase) CreateAccount(c *gin.Context, data request.ReqCreateAccount) error {
-	if data.Type == string(constant.Debit) {
-		//Create Scheduler for every day on month data.schedule
-		panic("Not implemented")
+	// if data.Type == string(constant.Debit) {
+	// 	//Create Scheduler for every day on month data.schedule
+	// 	panic("Not implemented")
+	// }
+	// if data.Type == string(constant.Credit) {
+	// 	panic("Not implemented")
+	// }
+
+	userID, err := uuid.Parse(data.UserID)
+	if err != nil {
+		return err
 	}
-	if data.Type == string(constant.Credit) {
-		panic("Not implemented")
+
+	account := &model.Account{
+		UserID:  userID,
+		Type:    data.Type,
+		Balance: data.Balance,
 	}
-	panic("Not implemented")
+
+	return u.Repo.CreateAccount(c, account)
 }
 
 // TakeLoan implements IUsecase.

@@ -31,6 +31,7 @@ func NewUserHandler(router *gin.RouterGroup, v custom_validator.Validator, uc us
 	{
 		account.Use(mw.AuthenticateUser())
 		account.GET("/", handler.GetAccount)
+		account.POST("/", handler.AddAccount)
 	}
 
 	transaction := router.Group("/transaction")
