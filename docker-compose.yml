@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  go-app:
+    build:
+      context: ./accountManager
+    container_name: go-app
+    depends_on:
+      - db
+      - kafka-broker-1
+    env_file:
+      - ./accountManager/.env
+    environment:
+    # Temporary environment variables
+      - DB_URI=postgres://postgres:postgres@db:5432/cxai
+      - KAFKA_BROKER=kafka-broker-1:9092
+      - JWT_SECRET= 
+      - SUPA_KEY=
+      - KAFKA_TOPIC=transaction-log
+      - SUPA_URL=
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+  node-app:
+    build:
+      context: ./servicePayment
+    container_name: node-app
+    environment:
+      - KAFKA_BROKER=kafka-broker-1:9092
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/cxai
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - kafka-broker-1
+    env_file:
+      - ./servicePayment/.env
+    networks:
+      - app-network
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2182:2181"
+    networks:
+      - app-network
+
+
+  kafka-broker-1:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-broker-1
+    ports:
+      - "19092:19092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-1:9092,PLAINTEXT_INTERNAL://localhost:19092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - app-network
+
+  db:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - "5433:5432"  # Exposing PostgreSQL's port
+    environment:
+      POSTGRES_DB: cxai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  

@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model tr_account {
+  account_id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String?   @db.Uuid
+  type       String?
+  balance    Decimal?  @db.Decimal
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+  tr_user    tr_user?  @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tr_user_accounts")
+
+  @@index([deleted_at], map: "idx_tr_account_deleted_at")
+}
+
+model tr_transaction {
+  transaction_id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String?
+  amount         Decimal? @db.Decimal
+  currency       String?
+  sender         String?
+  receiver       String?
+  type           String?
+  status         String?
+  created_at     String?
+  updated_at     String?
+}
+
+model tr_user {
+  user_id    String       @id @db.Uuid
+  email      String?
+  created_at String?      @default(dbgenerated("now()"))
+  updated_at String?      @default(dbgenerated("now()"))
+  deleted_at DateTime?    @db.Timestamptz(6)
+  tr_account tr_account[]
+}
+
+model tr_loan {
+  loan_id       String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String?
+  amount        Decimal?      @db.Decimal
+  interest_rate Decimal?      @db.Decimal
+  tenor         BigInt?
+  currency      String?
+  created_at    String?       @default(dbgenerated("now()"))
+  updated_at    String?       @default(dbgenerated("now()"))
+  deleted_at    DateTime?     @db.Timestamptz(6)
+  tr_loan_log   tr_loan_log[]
+}
+
+model tr_loan_log {
+  loan_log_id  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  loan_id      String?   @db.Uuid
+  total_amount Decimal?  @db.Decimal
+  is_paid      Boolean?
+  duedate      DateTime? @db.Timestamptz(6)
+  created_at   String?   @default(dbgenerated("now()"))
+  updated_at   String?   @default(dbgenerated("now()"))
+  tr_loan      tr_loan?  @relation(fields: [loan_id], references: [loan_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tr_loan_loan_logs")
+}
